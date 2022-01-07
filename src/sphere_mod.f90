@@ -21,7 +21,9 @@ module sphere_mod
     
 
     type(sphere) function init_sphere(centre, radius, mat)
+        
         implicit none
+
         type(vec3), intent(IN) :: centre
         real,       intent(IN) :: radius
         class(material), target :: mat

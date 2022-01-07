@@ -10,3 +10,6 @@ auto-tests = true
 auto-examples = true
 [install]
 library = false
+[dependencies]
+tev_bindings.git = "https://github.com/lewisfish/fortran_tev_bindings"
+

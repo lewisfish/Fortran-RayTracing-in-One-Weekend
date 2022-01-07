@@ -1,5 +1,4 @@
 module main
-!done up to 13.1 half way
     implicit none
 
     contains
@@ -198,10 +197,12 @@ program p
     use camera_mod
     use material_mod
     use utils, only : random, init_rng
-    ! use omp_lib
+    use omp_lib
+    use tev_mod, only : tevipc
 
     implicit none
     
+    type(tevipc) :: tev
     integer     :: image_width, image_height, i, j, s, samples_per_pixel, max_depth, progress, id
     real        :: aspect_ratio, u, v, dist_to_focus, aperture,x, y, z
     type(vec3)  :: pixel_color, lookat, lookfrom, vup
@@ -216,12 +217,14 @@ program p
     ! type(dielectric) :: material_left
     ! type(metal)      :: material_right
 
+    tev = tevipc()
+
     !image
     aspect_ratio = 3. / 2.
-    image_width = 100
+    image_width = 500
     image_height = int(image_width / aspect_ratio)
     progress = image_height-1
-    allocate(rgb(0:image_width-1, 0:image_height-1, 3))
+    allocate(rgb(0:image_height-1, 0:image_width-1, 3))
     samples_per_pixel = 50
     max_depth = 10
 
@@ -256,41 +259,48 @@ program p
     ! dist_to_focus_vec = lookfrom - lookat
     dist_to_focus = 10.0!dist_to_focus_vec%length()
     cam = camera(lookfrom, lookat, vup, 20., aspect_ratio, aperture, dist_to_focus)
-
+    call tev%create_image("RT", image_width, image_height, ["R", "G", "B"], .true.)
     !render
-    write(output_unit,"(A,A,I4,1x,I3,A)")"P3",new_line("a"), image_width,image_height, new_line("a"),"255",new_line("a")
-!$omp parallel default(none) shared(progress,cam, rgb, samples_per_pixel, image_height, image_width, max_depth, world)&
+    ! write(output_unit,"(A,A,I4,1x,I3,A)")"P3",new_line("a"), image_width,image_height, new_line("a"),"255",new_line("a")
+!$omp parallel default(none) shared(tev,progress,cam, rgb, samples_per_pixel, image_height, image_width, max_depth, world)&
 !$omp& private(i, j, s, u, v, pixel_color, r, x, y, z, id)
     id = 0!omp_get_thread_num()
 
 !$omp do
-    do j = image_height-1, 0, -1
-        ! print*,j
-        if(id == 0)then
-            write(error_unit,"(A,I3.1)", advance="No")achar(27)//"[1000D"//"Scanlines remaing:",progress
-            flush(error_unit)
-        end if
+    do j = 0, image_width-1
+        ! if(id == 0)then
+        !     write(error_unit,"(A,I3.1)", advance="No")achar(27)//"[1000D"//"Scanlines remaing:",progress
+        !     flush(error_unit)
+        ! end if
         !$omp atomic
             progress = progress - 1
-        do i = 0, image_width-1
+        do i = image_height-1,0,-1
 
             pixel_color = vec3(0., 0., 0.)
             do s = 1, samples_per_pixel
-                u = real(i + random()) / (image_width-1.)
-                v = real(j + random()) / (image_height-1.)
+                u = real(j + random()) / (image_height-1.)
+                v = real(i + random()) / (image_width-1.)
                 r = cam%get_ray(u, v)
                 pixel_color = pixel_color + ray_color(r, world, max_depth)
             end do
             x = pixel_color%x
             y = pixel_color%y
             z = pixel_color%z
-            !$omp atomic
-                rgb(i,j,1) = rgb(i,j,1) + x
-            !$omp atomic
-                rgb(i,j,2) = rgb(i,j,2) + y
-            !$omp atomic
-                rgb(i,j,3) = rgb(i,j,3) + z
 
+            !$omp atomic
+                rgb(image_height-1-i,j,1) = rgb(image_height-1-i,j,1) + x
+            !$omp atomic
+                rgb(image_height-1-i,j,2) = rgb(image_height-1-i,j,2) + y
+            !$omp atomic
+                rgb(image_height-1-i,j,3) = rgb(image_height-1-i,j,3) + z
+
+if(mod(progress,10) == 0)then
+!$omp critical
+if(id == 0)call tev%update_image("RT", (rgb(:,:,1:1)), ["R"], 0, 0, .true., .true.)
+if(id == 0)call tev%update_image("RT", (rgb(:,:,2:2)), ["G"], 0, 0, .true., .true.)
+if(id == 0)call tev%update_image("RT", (rgb(:,:,3:3)), ["B"], 0, 0, .true., .true.)
+!$omp end critical
+end if
             ! call write_colour(pixel_color, samples_per_pixel)
         end do
     end do
@@ -302,5 +312,10 @@ program p
     !         call write_colour(pixel_color, samples_per_pixel)
     !     end do
     ! end do
-    write(error_unit,*)new_line("a")
+    ! write(error_unit,*)new_line("a")
+    call tev%update_image("RT", (rgb(:,:,1:1)), ["R"], 0, 0, .true., .true.)
+    call tev%update_image("RT", (rgb(:,:,2:2)), ["G"], 0, 0, .true., .true.)
+    call tev%update_image("RT", (rgb(:,:,3:3)), ["B"], 0, 0, .true., .true.)
+
+
 end program p

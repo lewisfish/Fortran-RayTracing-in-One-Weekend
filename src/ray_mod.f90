@@ -18,14 +18,14 @@ module ray_mod
 
     contains
     
-    type(ray_t) function init_ray(origin, direction)
+    type(ray_t) function init_ray(origin, dir)
 
         implicit none
 
-        type(vec3), intent(IN) :: origin, direction
+        type(vec3), intent(IN) :: origin, dir
 
         init_ray%orig = origin
-        init_ray%dir = direction
+        init_ray%dir = dir
 
         end function init_ray
 

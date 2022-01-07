@@ -120,7 +120,7 @@ module material_mod
 
         end function init_metal
 
-
+    
         logical function scatter_metal(this, ray_in, rec, attenuation, scattered)
             
             implicit none
@@ -157,7 +157,7 @@ module material_mod
             type(vec3),       intent(OUT) :: attenuation
             type(hit_record), intent(IN)  :: rec
 
-            type(vec3) :: unit_direction, direction
+            type(vec3) :: unit_direction, dir
             real       :: refraction_ratio, cos_theta, sin_theta
             logical    :: cannot_refract
 
@@ -177,11 +177,11 @@ module material_mod
             cannot_refract = refraction_ratio * sin_theta > 1.0
 
             if(cannot_refract .or. reflectance(cos_theta, refraction_ratio) > random())then
-                direction = reflect(unit_direction, rec%normal)
+                dir = reflect(unit_direction, rec%normal)
             else
-                direction = refract(unit_direction, rec%normal, refraction_ratio)
+                dir = refract(unit_direction, rec%normal, refraction_ratio)
             end if
-            scattered = ray_t(rec%p, direction)
+            scattered = ray_t(rec%p, dir)
             scatter_dielectric = .true.
 
         end function scatter_dielectric

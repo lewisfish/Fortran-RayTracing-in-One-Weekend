@@ -110,15 +110,15 @@ Module vec3_class
         end function random_vec3_uni
 
 
-        type(vec3) function random_vec3_uni_range(min, max)
+        type(vec3) function random_vec3_uni_range(minv, maxv)
                 
             use utils, only : random
 
             implicit none
 
-            real, intent(IN) :: min, max
+            real, intent(IN) :: minv, maxv
             
-            random_vec3_uni_range = vec3(random(min, max), random(min, max), random(min, max))
+            random_vec3_uni_range = vec3(random(minv, maxv), random(minv, maxv), random(minv, maxv))
 
         end function random_vec3_uni_range
 

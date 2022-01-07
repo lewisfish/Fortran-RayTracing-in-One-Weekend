@@ -6,8 +6,8 @@ module camera_mod
     implicit none
 
     type :: camera
-        real :: vfov, aspect_ratio, aperture, focus_dist
-        real :: theta, h, viewport_height, viewport_width
+        real       :: vfov, aspect_ratio, aperture, focus_dist
+        real       :: theta, h, viewport_height, viewport_width
         type(vec3) :: lookfrom, lookat, vup
         real,       private :: lens_radius
         type(vec3), private :: origin, horizontal, vertical, lower_left_corner, u, v, w
